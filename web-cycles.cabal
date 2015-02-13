@@ -1,0 +1,21 @@
+name:                web-cycles
+version:             1.0
+homepage:            https://github.com/hlian/web-cycles
+license-file:        LICENSE
+author:              Hao Lian
+maintainer:          hi@haolian.org
+build-type:          Simple
+cabal-version:       >=1.10
+
+executable web-cycles
+  main-is:             Main.hs
+  other-extensions:    NoImplicitPrelude, OverloadedStrings
+  build-depends:       aeson >=0.8 && <0.9
+                     , array >=0.5 && <0.6
+                     , base >=4.7 && <4.8
+                     , base-prelude >=0.1 && <0.2
+                     , bytestring >=0.10 && <0.11
+                     , containers >=0.5 && <0.6
+                     , text >=1.2 && <1.3
+  hs-source-dirs:      src
+  default-language:    Haskell2010
