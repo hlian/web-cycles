@@ -15,7 +15,7 @@ import           Data.Graph (Vertex, Graph)
 import           Data.Tree
 
 newtype Links = Links [(T.Text, T.Text)] deriving (Show)
-data Component a = Component Graph (Tree a) (S.Set a) (a -> String)
+data Component a = Component Graph (a -> String) (S.Set a) (Tree a)
 
 instance FromJSON Links where
   parseJSON (Object o) = do
@@ -24,26 +24,25 @@ instance FromJSON Links where
     return (Links links)
   parseJSON _ = undefined
 
+-- Neat trick: transmogrity `Foldable f => f a` into `f (Set a)`, then fold, to get `Set a`.
 compose :: Ord a => Graph -> (a -> String) -> Tree a -> Component a
-compose g f t = Component g t (fold (S.singleton <$> t)) f
+compose g f t = Component g f (fold . fmap S.singleton $ t) t
 
 scc :: Links -> [Component Vertex]
 scc (Links links) =
   [compose graph (T.unpack . nameOf) tree | tree <- G.scc graph]
   where
+    -- This could be better, but Graph has a gnarly tuple-based API and I'm rushing.
     grouped = M.fromListWith (<>) ((\(s, t) -> (s, [t])) <$> links)
     (graph, f) = G.graphFromEdges' ((\(s, ts) -> (s, s, ts)) <$> M.toList grouped)
     nameOf = (\(x, _, _) -> x) . f
-
-present :: (Show a) => a -> T.Text
-present = T.pack . show
 
 intersection :: Ord a => [a] -> S.Set a -> [a]
 intersection xs ys =
   S.toList (S.intersection (S.fromList xs) ys)
 
 pretty :: Component Vertex -> Tree String
-pretty (Component g tree keys toString) = f tree
+pretty (Component g toString keys tree) = f tree
   where
     f (Node a []) =
       Node (toString a <> " -> " <> show (toString <$> intersection (g A.! a) keys)) []
